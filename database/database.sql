@@ -60,10 +60,10 @@ CREATE TABLE IF NOT EXISTS `transactions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
--- Seed a default admin login, PIN = 203050 (bcrypt hash below).
+-- Seed a default admin login, PIN = 103050 (bcrypt hash below).
 -- CHANGE THIS PIN after your first login — see README.md for how to
 -- generate a new hash and update this row.
 -- -----------------------------------------------------------------------------
 INSERT INTO `users` (`pin_hash`)
-SELECT '$2y$12$vEfcPqSX4KnybB.687Rl4eYaMnjxWYtas4B/saBzl2lDzpu64HQFm'
+SELECT '$2y$12$2tK18HmI9iCWZgKIhGaAI.TZ5nsz0FNwOwxiTyj3gDCMLcMZ1.abO'
 WHERE NOT EXISTS (SELECT 1 FROM `users`);

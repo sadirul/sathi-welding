@@ -32,7 +32,7 @@ A mobile-first, Android-app-style client & payment manager built with Core PHP 8
 
 ## 3. Default login
 
-The seed migration creates one login with PIN **`203050`**.
+The seed migration creates one login with PIN **`103050`**.
 
 **Change it immediately** — generate a new bcrypt hash and update the row:
 
