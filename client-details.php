@@ -58,7 +58,7 @@ $activePage = 'clients';
 
   <!-- Add Payment bottom sheet -->
   <div class="sheet-overlay" data-close-sheet="add-payment-sheet"></div>
-  <div class="bottom-sheet" id="add-payment-sheet">
+  <div class="bottom-sheet bottom-sheet--fullscreen" id="add-payment-sheet">
     <div class="bottom-sheet__handle"></div>
     <div class="bottom-sheet__header">
       <h2>Add Payment</h2>

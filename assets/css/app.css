@@ -598,6 +598,32 @@ a.stat-card:active { transform: scale(0.985); }
 
 .bottom-sheet__body { padding: 18px 20px 6px; }
 
+.bottom-sheet--fullscreen {
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  border-radius: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.bottom-sheet--fullscreen .bottom-sheet__handle { display: none; }
+
+.bottom-sheet--fullscreen .bottom-sheet__header {
+  flex-shrink: 0;
+  padding-top: calc(16px + var(--safe-top));
+}
+
+.bottom-sheet--fullscreen .bottom-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: calc(24px + var(--safe-bottom));
+}
+
 /* ==========================================================================
    Forms
    ========================================================================== */

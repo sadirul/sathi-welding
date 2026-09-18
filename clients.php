@@ -54,7 +54,7 @@ $activePage = 'clients';
 
   <!-- Add Client bottom sheet -->
   <div class="sheet-overlay" data-close-sheet="add-client-sheet"></div>
-  <div class="bottom-sheet" id="add-client-sheet">
+  <div class="bottom-sheet bottom-sheet--fullscreen" id="add-client-sheet">
     <div class="bottom-sheet__handle"></div>
     <div class="bottom-sheet__header">
       <h2>Add Client</h2>
