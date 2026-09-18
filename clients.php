@@ -21,7 +21,7 @@ $activePage = 'clients';
   <link rel="icon" href="assets/icons/icon-48.png" sizes="48x48" type="image/png">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="<?= asset_url('assets/css/app.css') ?>">
 </head>
 <body>
   <div class="app-shell">
@@ -79,8 +79,44 @@ $activePage = 'clients';
     </div>
   </div>
 
+  <!-- Edit Client bottom sheet -->
+  <div class="sheet-overlay" data-close-sheet="edit-client-sheet"></div>
+  <div class="bottom-sheet" id="edit-client-sheet">
+    <div class="bottom-sheet__handle"></div>
+    <div class="bottom-sheet__header">
+      <h2>Edit Client</h2>
+      <button class="icon-btn" type="button" data-close-sheet="edit-client-sheet" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="bottom-sheet__body">
+      <form id="edit-client-form" autocomplete="off">
+        <input type="hidden" id="edit-client-id">
+        <div class="form-group">
+          <label class="form-label" for="edit-client-name">Name</label>
+          <input class="form-control" type="text" id="edit-client-name" maxlength="150" required>
+          <div class="form-error" id="edit-error-name"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-client-mobile">Mobile <span class="optional">(optional)</span></label>
+          <input class="form-control" type="tel" id="edit-client-mobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+          <div class="form-error" id="edit-error-mobile"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-client-address">Address <span class="optional">(optional)</span></label>
+          <textarea class="form-control" id="edit-client-address" maxlength="500"></textarea>
+          <div class="form-error" id="edit-error-address"></div>
+        </div>
+        <div class="sheet-actions">
+          <button class="btn btn--secondary" type="button" data-close-sheet="edit-client-sheet">Cancel</button>
+          <button class="btn btn--primary" type="submit" id="edit-client-submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
 
-  <script src="assets/js/app.js"></script>
+  <script src="<?= asset_url('assets/js/app.js') ?>"></script>
 </body>
 </html>

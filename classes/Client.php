@@ -31,6 +31,22 @@ class Client
         return (int) $this->db->lastInsertId();
     }
 
+    public function update(int $id, string $name, ?string $mobile, ?string $address): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE clients
+             SET name = :name, mobile = :mobile, address = :address, updated_at = NOW()
+             WHERE id = :id'
+        );
+
+        $stmt->execute([
+            'id' => $id,
+            'name' => $name,
+            'mobile' => $mobile !== '' ? $mobile : null,
+            'address' => $address !== '' ? $address : null,
+        ]);
+    }
+
     /**
      * Returns all clients with computed total/due/paid financial aggregates.
      */

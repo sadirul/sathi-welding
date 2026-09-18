@@ -206,7 +206,26 @@
 
     const whatsappTrigger = e.target.closest('[data-whatsapp-btn]');
     if (whatsappTrigger) openWhatsAppReminder(whatsappTrigger.dataset);
+
+    const editTrigger = e.target.closest('[data-edit-client]');
+    if (editTrigger) openEditClientSheet(editTrigger.dataset);
   });
+
+  function openEditClientSheet({ id, name, mobile, address }) {
+    const idInput = document.getElementById('edit-client-id');
+    if (!idInput) return;
+
+    idInput.value = id;
+    document.getElementById('edit-client-name').value = name || '';
+    document.getElementById('edit-client-mobile').value = mobile || '';
+    document.getElementById('edit-client-address').value = address || '';
+    ['edit-error-name', 'edit-error-mobile', 'edit-error-address'].forEach((elId) => {
+      const el = document.getElementById(elId);
+      if (el) el.textContent = '';
+    });
+
+    BottomSheet.open('edit-client-sheet');
+  }
 
   /**
    * Opens WhatsApp (wa.me) with a prefilled due-amount reminder message.
@@ -340,13 +359,13 @@
           <div class="stat-card__icon"><i class="fa-solid fa-wallet"></i></div>
           <div><div class="stat-card__label">Total</div><div class="stat-card__value">${formatCurrency(data.total)}</div></div>
         </div>
-        <div class="stat-card stat-card--due">
-          <div class="stat-card__icon"><i class="fa-solid fa-hourglass-half"></i></div>
-          <div><div class="stat-card__label">Total Due</div><div class="stat-card__value">${formatCurrency(data.due)}</div></div>
-        </div>
         <div class="stat-card stat-card--paid">
           <div class="stat-card__icon"><i class="fa-solid fa-circle-check"></i></div>
           <div><div class="stat-card__label">Total Paid</div><div class="stat-card__value">${formatCurrency(data.paid)}</div></div>
+        </div>
+        <div class="stat-card stat-card--due">
+          <div class="stat-card__icon"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div><div class="stat-card__label">Total Due</div><div class="stat-card__value">${formatCurrency(data.due)}</div></div>
         </div>
         <a href="clients.php" class="stat-card stat-card--clients">
           <div class="stat-card__icon"><i class="fa-solid fa-users"></i></div>
@@ -363,31 +382,28 @@
 
   function clientCardHtml(client) {
     return `
-      <a class="client-card" href="client-details.php?id=${client.id}">
-        <div class="client-card__top">
-          <div class="client-avatar">${escapeHtml(initials(client.name))}</div>
-          <div>
-            <div class="client-card__name">${escapeHtml(client.name)}</div>
-            <div class="client-card__mobile"><i class="fa-solid fa-phone"></i> ${escapeHtml(client.mobile)}</div>
+      <div class="client-card">
+        <button class="client-card__edit-btn" type="button" data-edit-client
+          data-id="${client.id}" data-name="${escapeHtml(client.name)}"
+          data-mobile="${escapeHtml(client.mobile || '')}" data-address="${escapeHtml(client.address || '')}"
+          aria-label="Edit client">
+          <i class="fa-solid fa-pen"></i>
+        </button>
+        <a class="client-card__link" href="client-details.php?id=${client.id}">
+          <div class="client-card__top">
+            <div class="client-avatar">${escapeHtml(initials(client.name))}</div>
+            <div>
+              <div class="client-card__name">${escapeHtml(client.name)}</div>
+              ${client.mobile ? `<div class="client-card__mobile"><i class="fa-solid fa-phone"></i> ${escapeHtml(client.mobile)}</div>` : ''}
+            </div>
           </div>
-        </div>
-        <div class="client-card__stats">
-          <div class="client-card__stat"><div class="client-card__stat-label">Total</div><div class="client-card__stat-value">${formatCurrency(client.total)}</div></div>
-          <div class="client-card__stat client-card__stat--due"><div class="client-card__stat-label">Due</div><div class="client-card__stat-value">${formatCurrency(client.due)}</div></div>
-          <div class="client-card__stat client-card__stat--paid"><div class="client-card__stat-label">Paid</div><div class="client-card__stat-value">${formatCurrency(client.paid)}</div></div>
-        </div>
-      </a>`;
-  }
-
-  function clientRowHtml(client) {
-    return `
-      <a class="client-compact-row" href="client-details.php?id=${client.id}">
-        <div>
-          <div class="client-compact-row__name">${escapeHtml(client.name)}</div>
-          <div class="client-compact-row__due">Due ${formatCurrency(client.due)}</div>
-        </div>
-        <div class="client-compact-row__total">${formatCurrency(client.total)}</div>
-      </a>`;
+          <div class="client-card__stats">
+            <div class="client-card__stat"><div class="client-card__stat-label">Total</div><div class="client-card__stat-value">${formatCurrency(client.total)}</div></div>
+            <div class="client-card__stat client-card__stat--paid"><div class="client-card__stat-label">Paid</div><div class="client-card__stat-value">${formatCurrency(client.paid)}</div></div>
+            <div class="client-card__stat client-card__stat--due"><div class="client-card__stat-label">Due</div><div class="client-card__stat-value">${formatCurrency(client.due)}</div></div>
+          </div>
+        </a>
+      </div>`;
   }
 
   async function loadClients() {
@@ -411,17 +427,7 @@
         return;
       }
 
-      const withMobile = clients.filter((c) => c.mobile);
-      const withoutMobile = clients.filter((c) => !c.mobile);
-
-      let html = '';
-      if (withMobile.length) {
-        html += `<div class="client-list">${withMobile.map(clientCardHtml).join('')}</div>`;
-      }
-      if (withoutMobile.length) {
-        html += `<div class="section-label">Other clients</div><div class="client-compact-list">${withoutMobile.map(clientRowHtml).join('')}</div>`;
-      }
-      listRoot.innerHTML = html;
+      listRoot.innerHTML = `<div class="client-list">${clients.map(clientCardHtml).join('')}</div>`;
     } catch (err) {
       listRoot.innerHTML = `<div class="empty-state"><div class="empty-state__icon"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="empty-state__title">Could not load clients</div><div class="empty-state__subtitle">${escapeHtml(err.message || 'Please try again')}</div></div>`;
     }
@@ -474,6 +480,49 @@
     const mobileInput = document.getElementById('client-mobile');
     mobileInput && mobileInput.addEventListener('input', () => {
       mobileInput.value = mobileInput.value.replace(/\D/g, '').slice(0, 10);
+    });
+
+    const editForm = document.getElementById('edit-client-form');
+    const editSubmitBtn = document.getElementById('edit-client-submit');
+    const editErrorBox = {
+      name: document.getElementById('edit-error-name'),
+      mobile: document.getElementById('edit-error-mobile'),
+      address: document.getElementById('edit-error-address'),
+    };
+
+    editForm && editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      Object.values(editErrorBox).forEach((el) => el && (el.textContent = ''));
+
+      const id = document.getElementById('edit-client-id').value;
+      const name = document.getElementById('edit-client-name').value.trim();
+      const mobile = document.getElementById('edit-client-mobile').value.trim();
+      const address = document.getElementById('edit-client-address').value.trim();
+
+      editSubmitBtn.disabled = true;
+      editSubmitBtn.innerHTML = '<span class="spinner"></span> Saving...';
+
+      try {
+        await Api.post('edit-client.php', { id: Number(id), name, mobile, address });
+        Toast.show('Client updated successfully', 'success');
+        BottomSheet.close('edit-client-sheet');
+        loadClients();
+      } catch (err) {
+        if (err.errors) {
+          Object.entries(err.errors).forEach(([field, msg]) => {
+            if (editErrorBox[field]) editErrorBox[field].textContent = msg;
+          });
+        }
+        Toast.show(err.message || 'Could not update client', 'error');
+      } finally {
+        editSubmitBtn.disabled = false;
+        editSubmitBtn.innerHTML = 'Save Changes';
+      }
+    });
+
+    const editMobileInput = document.getElementById('edit-client-mobile');
+    editMobileInput && editMobileInput.addEventListener('input', () => {
+      editMobileInput.value = editMobileInput.value.replace(/\D/g, '').slice(0, 10);
     });
   }
 
@@ -528,8 +577,8 @@
 
       summaryRoot.innerHTML = `
         <div class="summary-card"><div class="summary-card__label">Total</div><div class="summary-card__value">${formatCurrency(client.total)}</div></div>
-        <div class="summary-card summary-card--due"><div class="summary-card__label">Due</div><div class="summary-card__value">${formatCurrency(client.due)}</div></div>
-        <div class="summary-card summary-card--paid"><div class="summary-card__label">Paid</div><div class="summary-card__value">${formatCurrency(client.paid)}</div></div>`;
+        <div class="summary-card summary-card--paid"><div class="summary-card__label">Paid</div><div class="summary-card__value">${formatCurrency(client.paid)}</div></div>
+        <div class="summary-card summary-card--due"><div class="summary-card__label">Due</div><div class="summary-card__value">${formatCurrency(client.due)}</div></div>`;
 
       if (!transactions.length) {
         listRoot.innerHTML = `

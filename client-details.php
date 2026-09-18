@@ -28,7 +28,7 @@ $activePage = 'clients';
   <link rel="icon" href="assets/icons/icon-48.png" sizes="48x48" type="image/png">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="<?= asset_url('assets/css/app.css') ?>">
 </head>
 <body>
   <div class="app-shell">
@@ -108,6 +108,6 @@ $activePage = 'clients';
 
   <div id="toast-container"></div>
 
-  <script src="assets/js/app.js"></script>
+  <script src="<?= asset_url('assets/js/app.js') ?>"></script>
 </body>
 </html>
