@@ -209,6 +209,17 @@
 
     const editTrigger = e.target.closest('[data-edit-client]');
     if (editTrigger) openEditClientSheet(editTrigger.dataset);
+
+    const shareImageTrigger = e.target.closest('[data-share-image-btn]');
+    if (shareImageTrigger) {
+      shareImageTrigger.disabled = true;
+      const originalHtml = shareImageTrigger.innerHTML;
+      shareImageTrigger.innerHTML = '<span class="spinner"></span> Preparing...';
+      generateAndShareStatementImage().finally(() => {
+        shareImageTrigger.disabled = false;
+        shareImageTrigger.innerHTML = originalHtml;
+      });
+    }
   });
 
   function openEditClientSheet({ id, name, mobile, address }) {
@@ -544,6 +555,96 @@
       </div>`;
   }
 
+  let currentClientStatement = null;
+
+  /**
+   * Snapshots the client details page (profile, summary, transaction history
+   * — the same UI the user sees) into a PNG via html2canvas and hands it to
+   * the OS share sheet (Android/desktop Chrome/Edge) via the Web Share API.
+   * Falls back to a plain download when file sharing isn't supported
+   * (e.g. desktop Firefox/Safari).
+   */
+  async function generateAndShareStatementImage() {
+    if (!currentClientStatement) return;
+    const { client, appName } = currentClientStatement;
+
+    const root = document.getElementById('client-detail-root');
+
+    // Hide action buttons (Add Payment / WhatsApp / Share) so the shared
+    // image is just the statement content, not the interactive controls.
+    const controls = root.querySelectorAll('.client-profile__actions, [data-open-sheet]');
+    const previouslyHidden = new Set();
+    controls.forEach((el) => {
+      if (el.hidden) previouslyHidden.add(el);
+      el.hidden = true;
+    });
+
+    // html2canvas renders CSS box-shadow poorly (heavy dark smears instead
+    // of a clean drop shadow) — strip shadows for the capture only. Also
+    // kill animations/transitions: html2canvas clones the DOM into an
+    // offscreen frame where animations (e.g. .app-content's page-load
+    // fade-in) restart from their 0% keyframe, and it rasterizes before
+    // they finish — which is why captures came out faded/washed-out.
+    const noShadowStyle = document.createElement('style');
+    noShadowStyle.textContent = '#client-detail-root, #client-detail-root * { box-shadow: none !important; animation: none !important; transition: none !important; }';
+    document.head.appendChild(noShadowStyle);
+
+    let canvas;
+    try {
+      canvas = await html2canvas(root, {
+        backgroundColor: '#f3f4f8',
+        scale: 2,
+        useCORS: true,
+        // Explicit width/height (rather than the default renderer's
+        // viewport-based guess) makes sure content taller than the visible
+        // screen — a long transaction list — is captured in full, not just
+        // what's currently scrolled into view.
+        width: root.scrollWidth,
+        height: root.scrollHeight,
+        windowWidth: root.scrollWidth,
+        windowHeight: root.scrollHeight,
+      });
+    } finally {
+      noShadowStyle.remove();
+      controls.forEach((el) => {
+        if (!previouslyHidden.has(el)) el.hidden = false;
+      });
+    }
+
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) {
+      Toast.show('Could not generate image', 'error');
+      return;
+    }
+
+    const fileName = `${client.name.replace(/[^a-z0-9]+/gi, '_')}_statement.png`;
+    const file = new File([blob], fileName, { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `${client.name} — Statement`,
+          text: `${appName} — payment statement for ${client.name}`,
+        });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+        // Fall through to download if sharing failed for any other reason.
+      }
+    }
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    Toast.show('Sharing not supported here — image downloaded instead', 'info');
+  }
+
   async function loadClientDetails(clientId) {
     const profileRoot = document.getElementById('client-profile');
     const summaryRoot = document.getElementById('summary-grid');
@@ -561,6 +662,8 @@
       const appName = document.getElementById('client-detail-root').dataset.appName || '';
       const showWhatsApp = Boolean(client.mobile) && client.due > 0;
 
+      currentClientStatement = { client, transactions, appName };
+
       profileRoot.innerHTML = `
         <div class="client-profile__avatar">${escapeHtml(initials(client.name))}</div>
         <div class="client-profile__name">${escapeHtml(client.name)}</div>
@@ -568,12 +671,17 @@
           ${client.mobile ? `<span><i class="fa-solid fa-phone"></i> ${escapeHtml(client.mobile)}</span>` : ''}
           ${client.address ? `<span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(client.address)}</span>` : ''}
         </div>
-        ${showWhatsApp ? `
-          <button class="btn-whatsapp" type="button" data-whatsapp-btn
-            data-mobile="${escapeHtml(client.mobile)}" data-name="${escapeHtml(client.name)}"
-            data-due="${client.due}" data-app-name="${escapeHtml(appName)}">
-            <i class="fa-brands fa-whatsapp"></i> Send Payment Reminder
-          </button>` : ''}`;
+        <div class="client-profile__actions">
+          ${showWhatsApp ? `
+            <button class="btn-whatsapp" type="button" data-whatsapp-btn
+              data-mobile="${escapeHtml(client.mobile)}" data-name="${escapeHtml(client.name)}"
+              data-due="${client.due}" data-app-name="${escapeHtml(appName)}">
+              <i class="fa-brands fa-whatsapp"></i> Send Payment Reminder
+            </button>` : ''}
+          <button class="btn-share-image" type="button" data-share-image-btn>
+            <i class="fa-solid fa-image"></i> Share Image
+          </button>
+        </div>`;
 
       summaryRoot.innerHTML = `
         <div class="summary-card"><div class="summary-card__label">Total</div><div class="summary-card__value">${formatCurrency(client.total)}</div></div>

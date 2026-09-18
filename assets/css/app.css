@@ -429,25 +429,37 @@ a.stat-card:active { transform: scale(0.985); }
 .client-profile__name { font-size: 19px; font-weight: 800; }
 .client-profile__meta { font-size: 13.5px; color: var(--color-text-secondary); margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
 
-.btn-whatsapp {
+.client-profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-whatsapp,
+.btn-share-image {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 16px;
   padding: 11px 20px;
   min-height: 44px;
   border: none;
   border-radius: var(--radius-pill);
-  background: #25d366;
-  color: #fff;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.1s ease, background 0.15s ease;
 }
 
+.btn-whatsapp { background: #25d366; color: #fff; }
 .btn-whatsapp i { font-size: 17px; }
 .btn-whatsapp:active { transform: scale(0.97); background: #1eb858; }
+
+.btn-share-image { background: var(--color-danger); color: #fff; }
+.btn-share-image i { font-size: 16px; }
+.btn-share-image:active { transform: scale(0.97); background: #d33; }
+.btn-share-image:disabled { opacity: 0.7; cursor: default; }
 
 .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
 
