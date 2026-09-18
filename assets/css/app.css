@@ -651,6 +651,33 @@ textarea.form-control { min-height: 80px; resize: vertical; font-family: inherit
 
 .login-actions { width: 100%; margin-top: 26px; }
 
+.install-app-btn {
+  position: fixed;
+  left: 50%;
+  bottom: calc(86px + var(--safe-bottom));
+  transform: translateX(-50%);
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 13px 22px;
+  min-height: 46px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1.5px solid var(--color-border);
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.1s ease;
+}
+
+.install-app-btn i { font-size: 16px; color: var(--color-primary); }
+.install-app-btn:active { transform: translateX(-50%) scale(0.96); }
+
 /* ==========================================================================
    Toast notifications
    ========================================================================== */

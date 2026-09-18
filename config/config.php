@@ -6,6 +6,28 @@
 
 declare(strict_types=1);
 
+// Load KEY=VALUE pairs from a .env file at the project root, if present,
+// into getenv()/$_ENV — without overriding real OS environment variables.
+$envFile = __DIR__ . '/../.env';
+if (is_file($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+
+        [$key, $value] = array_pad(explode('=', $line, 2), 2, '');
+        $key = trim($key);
+        $value = trim(trim($value), "\"'");
+
+        if ($key !== '' && getenv($key) === false) {
+            putenv("$key=$value");
+            $_ENV[$key] = $value;
+        }
+    }
+}
+unset($envFile, $line, $key, $value);
+
 // Show errors only in development. Set APP_ENV=production on the live server.
 define('APP_ENV', getenv('APP_ENV') ?: 'development');
 define('APP_NAME', 'Sathi Welding Karkhana');

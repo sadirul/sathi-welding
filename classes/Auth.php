@@ -15,15 +15,25 @@ class Auth
     }
 
     /**
-     * Verifies the PIN against the stored admin user and starts an authenticated session.
+     * Verifies the PIN against every stored login and starts an authenticated
+     * session on the first match. Checking all rows (rather than assuming a
+     * single admin row) avoids silently ignoring a valid PIN if the users
+     * table ever ends up with more than one row (e.g. a re-seed that inserted
+     * a new row instead of updating the existing one).
      */
     public function login(string $pin): bool
     {
-        $stmt = $this->db->prepare('SELECT id, pin_hash FROM users ORDER BY id ASC LIMIT 1');
-        $stmt->execute();
-        $user = $stmt->fetch();
+        $stmt = $this->db->query('SELECT id, pin_hash FROM users');
+        $matchedUser = null;
 
-        if (!$user || !password_verify($pin, $user['pin_hash'])) {
+        foreach ($stmt as $user) {
+            if (password_verify($pin, $user['pin_hash'])) {
+                $matchedUser = $user;
+                break;
+            }
+        }
+
+        if ($matchedUser === null) {
             // Slow down brute-force attempts.
             usleep(300000);
             return false;
@@ -32,7 +42,7 @@ class Auth
         // Prevent session fixation.
         session_regenerate_id(true);
 
-        $_SESSION['user_id'] = (int) $user['id'];
+        $_SESSION['user_id'] = (int) $matchedUser['id'];
         $_SESSION['logged_in_at'] = time();
 
         return true;

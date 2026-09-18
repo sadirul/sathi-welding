@@ -19,10 +19,12 @@ A mobile-first, Android-app-style client & payment manager built with Core PHP 8
    - Incremental: run the files in `migrations/` in order (`001_...` → `004_...`).
    
    Both create `users`, `clients`, `transactions` and seed one login user.
-3. If your MySQL uses a different host/user/password/db name, set environment
-   variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`) or edit the
-   fallback defaults in `config/database.php`. Defaults match a stock XAMPP
-   setup (`127.0.0.1`, user `root`, empty password, db `sathiwelding`).
+3. If your MySQL uses a different host/user/password/db name, copy
+   `.env.example` to `.env` and edit the values there — `config/config.php`
+   loads it automatically (no server restart needed). A `.env` is already
+   in place matching a stock XAMPP setup (`127.0.0.1`, user `root`, empty
+   password, db `sathiwelding`); `.env` is git-ignored and blocked from
+   direct web access, so it's safe to put real credentials in it.
 4. Start Apache + MySQL from the XAMPP control panel.
 5. Open **http://localhost/sathi-welding/** — Apache serves `index.php` at
    the project root directly, which redirects to `login.php` if you aren't

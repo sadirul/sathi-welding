@@ -46,8 +46,14 @@ if (Auth::check()) {
           <button id="login-btn" class="btn btn--primary btn--block" type="submit" disabled>Login</button>
         </div>
       </form>
+
     </div>
   </div>
+
+  <button id="install-app-btn" class="install-app-btn" type="button" hidden>
+    <i class="fa-solid fa-download"></i>
+    <span>Install App</span>
+  </button>
 
   <div id="toast-container"></div>
 

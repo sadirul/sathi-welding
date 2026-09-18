@@ -9,7 +9,7 @@ ServerSignature Off
 
 DirectoryIndex index.php
 
-<Files "_bootstrap.php">
+<FilesMatch "^(_bootstrap\.php|\.env.*)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
@@ -17,4 +17,4 @@ DirectoryIndex index.php
     Order allow,deny
     Deny from all
   </IfModule>
-</Files>
+</FilesMatch>

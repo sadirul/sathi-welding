@@ -600,11 +600,56 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* PWA install (login page "Install App" button)                       */
+  /* ------------------------------------------------------------------ */
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+
+  let deferredInstallPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const installBtn = document.getElementById('install-app-btn');
+    if (installBtn) installBtn.hidden = false;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    const installBtn = document.getElementById('install-app-btn');
+    if (installBtn) installBtn.hidden = true;
+    Toast.show('App installed successfully', 'success');
+  });
+
+  function initInstallButton() {
+    const installBtn = document.getElementById('install-app-btn');
+    if (!installBtn) return;
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      installBtn.disabled = true;
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.disabled = false;
+      installBtn.hidden = true;
+      if (choice.outcome !== 'accepted') {
+        Toast.show('Installation cancelled', 'info');
+      }
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Boot                                                                 */
   /* ------------------------------------------------------------------ */
 
   document.addEventListener('DOMContentLoaded', () => {
     initLoginPage();
+    initInstallButton();
     initDashboardPage();
     initClientsPage();
     initClientDetailsPage();
