@@ -199,7 +199,10 @@
 
   document.addEventListener('click', (e) => {
     const openTrigger = e.target.closest('[data-open-sheet]');
-    if (openTrigger) BottomSheet.open(openTrigger.dataset.openSheet);
+    if (openTrigger) {
+      BottomSheet.open(openTrigger.dataset.openSheet);
+      if (openTrigger.dataset.openSheet === 'add-payment-sheet') presetPaymentType();
+    }
 
     const closeTrigger = e.target.closest('[data-close-sheet]');
     if (closeTrigger) BottomSheet.close(closeTrigger.dataset.closeSheet);
@@ -417,6 +420,54 @@
       </div>`;
   }
 
+  let allClients = [];
+
+  function renderClientList(clients, searchQuery) {
+    const listRoot = document.getElementById('clients-list');
+    if (!listRoot) return;
+
+    if (!clients.length) {
+      if (searchQuery) {
+        listRoot.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state__icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="empty-state__title">No matching clients</div>
+            <div class="empty-state__subtitle">No client found for "${escapeHtml(searchQuery)}".</div>
+          </div>`;
+      } else {
+        listRoot.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state__icon"><i class="fa-solid fa-users"></i></div>
+            <div class="empty-state__title">No clients yet</div>
+            <div class="empty-state__subtitle">Add your first client to get started.</div>
+            <button class="fab" style="margin:0 auto" data-open-sheet="add-client-sheet"><i class="fa-solid fa-plus"></i> Add Client</button>
+          </div>`;
+      }
+      return;
+    }
+
+    listRoot.innerHTML = `<div class="client-list">${clients.map(clientCardHtml).join('')}</div>`;
+  }
+
+  function filterClients(query) {
+    const trimmed = query.trim().toLowerCase();
+    const clearBtn = document.getElementById('client-search-clear');
+    if (clearBtn) clearBtn.hidden = trimmed === '';
+
+    if (!trimmed) {
+      renderClientList(allClients, '');
+      return;
+    }
+
+    const filtered = allClients.filter((client) => {
+      const name = (client.name || '').toLowerCase();
+      const mobile = client.mobile || '';
+      return name.includes(trimmed) || mobile.includes(trimmed);
+    });
+
+    renderClientList(filtered, query.trim());
+  }
+
   async function loadClients() {
     const listRoot = document.getElementById('clients-list');
     if (!listRoot) return;
@@ -425,20 +476,15 @@
 
     try {
       const data = await Api.get('clients.php');
-      const clients = data.clients || [];
+      allClients = data.clients || [];
 
-      if (!clients.length) {
-        listRoot.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state__icon"><i class="fa-solid fa-users"></i></div>
-            <div class="empty-state__title">No clients yet</div>
-            <div class="empty-state__subtitle">Add your first client to get started.</div>
-            <button class="fab" style="margin:0 auto" data-open-sheet="add-client-sheet"><i class="fa-solid fa-plus"></i> Add Client</button>
-          </div>`;
-        return;
+      const searchInput = document.getElementById('client-search');
+      const query = searchInput ? searchInput.value.trim() : '';
+      if (query) {
+        filterClients(query);
+      } else {
+        renderClientList(allClients, '');
       }
-
-      listRoot.innerHTML = `<div class="client-list">${clients.map(clientCardHtml).join('')}</div>`;
     } catch (err) {
       listRoot.innerHTML = `<div class="empty-state"><div class="empty-state__icon"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="empty-state__title">Could not load clients</div><div class="empty-state__subtitle">${escapeHtml(err.message || 'Please try again')}</div></div>`;
     }
@@ -449,6 +495,16 @@
     if (!listRoot) return;
 
     loadClients();
+
+    const searchInput = document.getElementById('client-search');
+    const searchClearBtn = document.getElementById('client-search-clear');
+
+    searchInput && searchInput.addEventListener('input', () => filterClients(searchInput.value));
+    searchClearBtn && searchClearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      filterClients('');
+      searchInput.focus();
+    });
 
     const form = document.getElementById('add-client-form');
     const submitBtn = document.getElementById('add-client-submit');
@@ -661,6 +717,7 @@
 
       const appName = document.getElementById('client-detail-root').dataset.appName || '';
       const showWhatsApp = Boolean(client.mobile) && client.due > 0;
+      const showImageShare = client.due > 0;
 
       currentClientStatement = { client, transactions, appName };
 
@@ -676,11 +733,13 @@
             <button class="btn-whatsapp" type="button" data-whatsapp-btn
               data-mobile="${escapeHtml(client.mobile)}" data-name="${escapeHtml(client.name)}"
               data-due="${client.due}" data-app-name="${escapeHtml(appName)}">
-              <i class="fa-brands fa-whatsapp"></i> Send Payment Reminder
+              <i class="fa-brands fa-whatsapp"></i> Send Reminder
             </button>` : ''}
-          <button class="btn-share-image" type="button" data-share-image-btn>
+          ${showImageShare ? `
+            <button class="btn-share-image" type="button" data-share-image-btn>
             <i class="fa-solid fa-image"></i> Share Image
-          </button>
+          </button>` : ''}
+          
         </div>`;
 
       summaryRoot.innerHTML = `
@@ -701,6 +760,24 @@
       }
     } catch (err) {
       listRoot.innerHTML = `<div class="empty-state"><div class="empty-state__icon"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="empty-state__title">Could not load client</div><div class="empty-state__subtitle">${escapeHtml(err.message || 'Please try again')}</div></div>`;
+    }
+  }
+
+  /**
+   * Defaults the Add Payment type to whichever makes sense for the client's
+   * current balance: Paid when there's an outstanding due to pay off,
+   * Due when there's nothing owed yet (so the next entry is likely new work).
+   */
+  function presetPaymentType() {
+    if (!currentClientStatement) return;
+    const dueRadio = document.getElementById('type-due');
+    const paidRadio = document.getElementById('type-paid');
+    if (!dueRadio || !paidRadio) return;
+
+    if (currentClientStatement.client.due > 0) {
+      paidRadio.checked = true;
+    } else {
+      dueRadio.checked = true;
     }
   }
 
@@ -732,6 +809,13 @@
       const typeEl = form.querySelector('input[name="type"]:checked');
       const type = typeEl ? typeEl.value : '';
       const notes = document.getElementById('payment-notes').value.trim();
+
+      if (type === 'paid' && currentClientStatement && Number(amount) > currentClientStatement.client.due) {
+        const dueText = formatCurrency(currentClientStatement.client.due);
+        errorBox.amount.textContent = `Paid amount cannot exceed the due amount (${dueText})`;
+        Toast.show(`Paid amount cannot be more than the due amount (${dueText})`, 'error');
+        return;
+      }
 
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span class="spinner"></span> Saving...';

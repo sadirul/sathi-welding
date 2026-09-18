@@ -28,9 +28,16 @@ if ($validator->fails()) {
 }
 
 $clientModel = new Client($db);
+$existingClient = $clientId > 0 ? $clientModel->findById($clientId) : null;
 
-if ($clientId <= 0 || !$clientModel->exists($clientId)) {
+if (!$existingClient) {
     Response::error('Client not found', [], 404);
+}
+
+if ($type === 'paid' && (float) $amount > $existingClient['due']) {
+    Response::error('Please fix the errors below', [
+        'amount' => 'Paid amount cannot exceed the due amount (' . format_inr($existingClient['due']) . ')',
+    ], 400);
 }
 
 $transactionModel = new Transaction($db);

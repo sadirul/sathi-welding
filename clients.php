@@ -36,6 +36,14 @@ $activePage = 'clients';
         </button>
       </div>
 
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="client-search" class="form-control" placeholder="Search clients by name or mobile" autocomplete="off">
+        <button type="button" id="client-search-clear" class="search-box__clear" aria-label="Clear search" hidden>
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
       <div id="clients-list">
         <div class="skeleton skeleton--card"></div>
         <div class="skeleton skeleton--card"></div>

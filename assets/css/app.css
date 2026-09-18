@@ -262,6 +262,43 @@ a { color: inherit; text-decoration: none; }
 
 .page-header-row h1 { font-size: 20px; margin: 0; font-weight: 800; }
 
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.search-box i.fa-magnifying-glass {
+  position: absolute;
+  left: 14px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.search-box .form-control {
+  padding-left: 38px;
+  padding-right: 38px;
+}
+
+.search-box__clear {
+  position: absolute;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.search-box__clear:active { background: var(--color-border); }
+
 .fab {
   display: flex;
   align-items: center;

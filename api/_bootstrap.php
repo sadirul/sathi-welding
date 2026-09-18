@@ -63,4 +63,29 @@ function api_json_body(): array
     return is_array($data) ? $data : [];
 }
 
+/**
+ * Formats a rupee amount using Indian digit grouping (e.g. ₹1,25,000),
+ * mirroring assets/js/app.js's formatCurrency() for error messages.
+ */
+function format_inr(float $amount): string
+{
+    $isNegative = $amount < 0;
+    $amount = abs($amount);
+    $wholePart = (string) (int) $amount;
+    $decimalPart = round($amount - (int) $amount, 2);
+
+    if (strlen($wholePart) > 3) {
+        $lastThree = substr($wholePart, -3);
+        $rest = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', substr($wholePart, 0, -3));
+        $wholePart = $rest . ',' . $lastThree;
+    }
+
+    $formatted = '₹' . $wholePart;
+    if ($decimalPart > 0) {
+        $formatted .= '.' . str_pad((string) round($decimalPart * 100), 2, '0', STR_PAD_LEFT);
+    }
+
+    return ($isNegative ? '-' : '') . $formatted;
+}
+
 $db = Database::getConnection();
