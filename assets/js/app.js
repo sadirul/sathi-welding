@@ -672,13 +672,16 @@
     const isDue = t.type === 'due';
     return `
       <div class="transaction-card transaction-card--${t.type}">
-        <div class="transaction-card__icon"><i class="fa-solid ${isDue ? 'fa-hourglass-half' : 'fa-circle-check'}"></i></div>
-        <div class="transaction-card__body">
-          <div class="transaction-card__notes">${escapeHtml(t.notes || (isDue ? 'Due amount' : 'Payment received'))}</div>
-          <div class="transaction-card__date">${formatDate(t.created_at)}</div>
-          <span class="badge badge--${t.type}">${isDue ? 'Due' : 'Paid'}</span>
+        <div class="transaction-card__main">
+          <div class="transaction-card__icon"><i class="fa-solid ${isDue ? 'fa-hourglass-half' : 'fa-circle-check'}"></i></div>
+          <div class="transaction-card__body">
+            <div class="transaction-card__notes">${escapeHtml(t.notes || (isDue ? 'Due amount' : 'Payment received'))}</div>
+            <div class="transaction-card__date">${formatDate(t.created_at)}</div>
+            <span class="badge badge--${t.type}">${isDue ? 'Due' : 'Paid'}</span>
+          </div>
+          <div class="transaction-card__amount">${formatCurrency(t.amount)}</div>
         </div>
-        <div class="transaction-card__amount">${formatCurrency(t.amount)}</div>
+        ${t.received_by ? `<div class="transaction-card__footer">${isDue ? 'Added by' : 'Received by'}: <strong>${escapeHtml(t.received_by)}</strong></div>` : ''}
       </div>`;
   }
 

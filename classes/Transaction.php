@@ -15,15 +15,16 @@ class Transaction
         $this->db = $db;
     }
 
-    public function create(int $clientId, float $amount, string $type, ?string $notes): int
+    public function create(int $clientId, float $amount, string $type, ?string $notes, ?int $userId): int
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO transactions (client_id, amount, type, notes, created_at, updated_at)
-             VALUES (:client_id, :amount, :type, :notes, NOW(), NOW())'
+            'INSERT INTO transactions (client_id, user_id, amount, type, notes, created_at, updated_at)
+             VALUES (:client_id, :user_id, :amount, :type, :notes, NOW(), NOW())'
         );
 
         $stmt->execute([
             'client_id' => $clientId,
+            'user_id' => $userId,
             'amount' => $amount,
             'type' => $type,
             'notes' => ($notes !== null && $notes !== '') ? $notes : null,
@@ -35,10 +36,11 @@ class Transaction
     public function getByClient(int $clientId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, client_id, amount, type, notes, created_at
-             FROM transactions
-             WHERE client_id = :client_id
-             ORDER BY created_at DESC, id DESC'
+            'SELECT t.id, t.client_id, t.amount, t.type, t.notes, t.created_at, u.name AS received_by
+             FROM transactions t
+             LEFT JOIN users u ON u.id = t.user_id
+             WHERE t.client_id = :client_id
+             ORDER BY t.created_at DESC, t.id DESC'
         );
         $stmt->execute(['client_id' => $clientId]);
 

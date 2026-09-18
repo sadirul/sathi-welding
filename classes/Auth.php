@@ -23,7 +23,7 @@ class Auth
      */
     public function login(string $pin): bool
     {
-        $stmt = $this->db->query('SELECT id, pin_hash FROM users');
+        $stmt = $this->db->query('SELECT id, name, pin_hash FROM users');
         $matchedUser = null;
 
         foreach ($stmt as $user) {
@@ -43,6 +43,7 @@ class Auth
         session_regenerate_id(true);
 
         $_SESSION['user_id'] = (int) $matchedUser['id'];
+        $_SESSION['user_name'] = $matchedUser['name'];
         $_SESSION['logged_in_at'] = time();
 
         return true;
@@ -68,6 +69,11 @@ class Auth
     public static function id(): ?int
     {
         return $_SESSION['user_id'] ?? null;
+    }
+
+    public static function name(): ?string
+    {
+        return $_SESSION['user_name'] ?? null;
     }
 
     /**

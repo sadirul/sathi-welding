@@ -41,7 +41,7 @@ if ($type === 'paid' && (float) $amount > $existingClient['due']) {
 }
 
 $transactionModel = new Transaction($db);
-$transactionModel->create($clientId, (float) $amount, $type, $notes !== '' ? $notes : null);
+$transactionModel->create($clientId, (float) $amount, $type, $notes !== '' ? $notes : null, Auth::id());
 
 $client = $clientModel->findById($clientId);
 $transactions = $transactionModel->getByClient($clientId);
