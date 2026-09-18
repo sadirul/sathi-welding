@@ -1,0 +1,20 @@
+# Sathi Welding Karkhana — project root
+# This directory itself is now the web root (login.php, index.php, clients.php,
+# client-details.php, assets/, manifest.json). Only it and api/ should ever be
+# reached directly by a browser — config/, classes/, database/, migrations/
+# and views/ each carry their own .htaccess denying direct access.
+
+Options -Indexes
+ServerSignature Off
+
+DirectoryIndex index.php
+
+<Files "_bootstrap.php">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</Files>
