@@ -106,6 +106,18 @@ $activePage = 'clients';
     </div>
   </div>
 
+  <!-- Delete client confirmation modal -->
+  <div class="modal-overlay" id="confirm-modal-overlay"></div>
+  <div class="confirm-modal" id="confirm-modal">
+    <div class="confirm-modal__icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h3 class="confirm-modal__title" id="confirm-modal-title">Are you sure?</h3>
+    <p class="confirm-modal__message" id="confirm-modal-message">This action cannot be undone.</p>
+    <div class="confirm-modal__actions">
+      <button class="btn btn--secondary" type="button" id="confirm-modal-cancel">Cancel</button>
+      <button class="btn btn--danger" type="button" id="confirm-modal-confirm">Delete</button>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

@@ -197,6 +197,56 @@
   };
   window.BottomSheet = BottomSheet;
 
+  /* ------------------------------------------------------------------ */
+  /* Confirm modal helper (centered Are-you-sure dialog)                 */
+  /* ------------------------------------------------------------------ */
+
+  let confirmModalHandler = null;
+
+  const ConfirmModal = {
+    open({ title, message, confirmLabel, onConfirm }) {
+      const overlay = document.getElementById('confirm-modal-overlay');
+      const modal = document.getElementById('confirm-modal');
+      const confirmBtn = document.getElementById('confirm-modal-confirm');
+      if (!overlay || !modal || !confirmBtn) return;
+
+      document.getElementById('confirm-modal-title').textContent = title || 'Are you sure?';
+      document.getElementById('confirm-modal-message').textContent = message || 'This action cannot be undone.';
+      confirmBtn.textContent = confirmLabel || 'Delete';
+
+      if (confirmModalHandler) confirmBtn.removeEventListener('click', confirmModalHandler);
+      confirmModalHandler = () => {
+        ConfirmModal.close();
+        onConfirm && onConfirm();
+      };
+      confirmBtn.addEventListener('click', confirmModalHandler);
+
+      document.body.style.overflow = 'hidden';
+      overlay.classList.add('is-open');
+      modal.classList.add('is-open');
+    },
+    close() {
+      const overlay = document.getElementById('confirm-modal-overlay');
+      const modal = document.getElementById('confirm-modal');
+      const confirmBtn = document.getElementById('confirm-modal-confirm');
+      document.body.style.overflow = '';
+      overlay && overlay.classList.remove('is-open');
+      modal && modal.classList.remove('is-open');
+      if (confirmBtn && confirmModalHandler) {
+        confirmBtn.removeEventListener('click', confirmModalHandler);
+        confirmModalHandler = null;
+      }
+    },
+  };
+  window.ConfirmModal = ConfirmModal;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const confirmOverlay = document.getElementById('confirm-modal-overlay');
+    const confirmCancelBtn = document.getElementById('confirm-modal-cancel');
+    confirmOverlay && confirmOverlay.addEventListener('click', () => ConfirmModal.close());
+    confirmCancelBtn && confirmCancelBtn.addEventListener('click', () => ConfirmModal.close());
+  });
+
   document.addEventListener('click', (e) => {
     const openTrigger = e.target.closest('[data-open-sheet]');
     if (openTrigger) {
@@ -223,7 +273,28 @@
         shareImageTrigger.innerHTML = originalHtml;
       });
     }
+
+    const deleteTrigger = e.target.closest('[data-delete-client]');
+    if (deleteTrigger) {
+      const { id, name } = deleteTrigger.dataset;
+      ConfirmModal.open({
+        title: 'Delete this client?',
+        message: `Are you sure you want to delete "${name}"?`,
+        confirmLabel: 'Delete',
+        onConfirm: () => deleteClient(id),
+      });
+    }
   });
+
+  async function deleteClient(id) {
+    try {
+      await Api.post('delete-client.php', { id: Number(id) });
+      Toast.show('Client deleted successfully', 'success');
+      setTimeout(() => { window.location.href = 'clients.php'; }, 600);
+    } catch (err) {
+      Toast.show(err.message || 'Could not delete client', 'error');
+    }
+  }
 
   function openEditClientSheet({ id, name, mobile, address }) {
     const idInput = document.getElementById('edit-client-id');
@@ -722,6 +793,10 @@
       currentClientStatement = { client, transactions, appName };
 
       profileRoot.innerHTML = `
+        <button class="client-profile__delete-btn" type="button" data-delete-client
+          data-id="${client.id}" data-name="${escapeHtml(client.name)}" aria-label="Delete client">
+          <i class="fa-solid fa-trash"></i>
+        </button>
         <div class="client-profile__avatar">${escapeHtml(initials(client.name))}</div>
         <div class="client-profile__name">${escapeHtml(client.name)}</div>
         <div class="client-profile__meta">

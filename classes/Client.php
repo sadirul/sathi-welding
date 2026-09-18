@@ -94,6 +94,16 @@ class Client
     }
 
     /**
+     * Deletes the client. Their transactions are removed automatically via
+     * the transactions.client_id foreign key's ON DELETE CASCADE.
+     */
+    public function delete(int $id): void
+    {
+        $stmt = $this->db->prepare('DELETE FROM clients WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+    }
+
+    /**
      * Normalizes numeric aggregate fields and derives the outstanding due balance.
      */
     private static function withDueBalance(array $row): array
